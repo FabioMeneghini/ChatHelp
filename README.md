@@ -1,16 +1,16 @@
 # ChatHelp
-A simple chat application that uses hybrid search algorithms and LLMs to answer questions about software programs based on the documentation file of the program in quesiton.
+_ChatHelp_ is a simple chat application that uses hybrid search algorithms and LLMs to answer questions about software programs based on the documentation file of the program in quesiton.
 
 This application was developed as final project of the Bachelor's Degree in Computer Science at University of Padua during my internship period at _Zucchetti S.p.A._
 
 ## Documentation
-The documentation of this project consists in my thesis, which can be found in this repo (in Italian).
+The complete documentation of this project (requirements analisys, code design, testing and a deep mathematical analisys of the used algorithms) consists in my thesis, which can be found in this repo (in Italian).
 
 ## Instructions
 In order to run _ChatHelp_, make sure to follow all the steps below.
 
 ### Clone this repo
-1. Clone this repo with the command `git clone ...` to get your local copy
+1. Clone this repo with the command `git clone https://github.com/FabioMeneghini/ChatHelp.git` to get your local copy
 
 ### Install Python and the required packages
 1. Install `Python 3`
