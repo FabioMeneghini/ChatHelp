@@ -6,17 +6,29 @@ This application was developed as final project of the Bachelor's Degree in Comp
 ## Documentation
 The documentation of this project consists in my thesis, which can be found in this repo (in Italian).
 
-## How to run the application
+## Instructions
 In order to run _ChatHelp_, make sure to follow all the steps below.
 
-### Install dependencies
-streamlit==1.36.0
-psycopg2==2.9.9
-txtai==7.4.0
-matplotlib==3.8.2
-networkx==3.2.1
-fitz==0.0.1.dev2
-groq==0.9.0
+### Clone this repo
+1. Clone this repo with the command `git clone ...` to get your local copy
+
+### Install Python and the required packages
+1. Install `Python 3`
+2. install the required libraries and packages with the command `pip install -r requirements.txt`
+
+### Get a Groq API key
+1. Create a GroqCloud account [here](https://console.groq.com/login)
+2. create an API key [here](https://console.groq.com/keys)
+3. copy your API key and paste it in the `.env` file in yor local copy of this repo
+
+### Setup the database
+1. install `PostgreSQL`
+2. install the `pgvector` extension for `PostgreSQL` (follow the instruction [here](https://github.com/pgvector/pgvector))
+3. create a database named `documentazione`
+4. create a table named `docs` with the following fields: `codice` (smallint), `testo` (character varying, 4095), `vettore` (vector) and `sezione` (character varying, 255)
+5. create a table named `file` with the field `nome` (character varying, 255)
 
 ### Run the application
-ciaociao
+1. Open the command prompt
+2. go to your local repository location
+3. run the application with the command `streamlit run src/gui_main_window.py`
