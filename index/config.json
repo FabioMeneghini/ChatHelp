@@ -1,0 +1,42 @@
+{
+  "path": "nickprock/sentence-bert-base-italian-xxl-uncased",
+  "content": true,
+  "functions": [
+    {
+      "name": "graph",
+      "function": "graph.attribute"
+    }
+  ],
+  "expressions": [
+    {
+      "name": "category",
+      "expression": "graph(indexid, 'category')"
+    },
+    {
+      "name": "topic",
+      "expression": "graph(indexid, 'topic')"
+    },
+    {
+      "name": "topicrank",
+      "expression": "graph(indexid, 'topicrank')"
+    }
+  ],
+  "graph": {
+    "limit": 15,
+    "minscore": 0.2,
+    "backend": "networkx"
+  },
+  "dimensions": 768,
+  "backend": "faiss",
+  "offset": 418,
+  "build": {
+    "create": "2024-09-21T15:57:37Z",
+    "python": "3.9.9",
+    "settings": {
+      "components": "IDMap,Flat"
+    },
+    "system": "Windows (AMD64)",
+    "txtai": "7.4.0"
+  },
+  "update": "2024-09-21T15:57:37Z"
+}
