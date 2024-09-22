@@ -23,7 +23,7 @@ In order to run and use _ChatHelp_, make sure to follow all the steps below.
 
 ### Step 4 - Setup the database
 1. install `PostgreSQL`
-2. install the `pgvector` extension for `PostgreSQL` (follow the instruction [here](https://github.com/pgvector/pgvector))
+2. install the `pgvector` extension for `PostgreSQL` (follow the instructions [here](https://github.com/pgvector/pgvector))
 3. create a database named `documentazione`
 4. create a table named `docs` with the following fields: `codice` (smallint), `testo` (character varying, 4095), `vettore` (vector) and `sezione` (character varying, 255)
 5. create a table named `file` with the field `nome` (character varying, 255)
