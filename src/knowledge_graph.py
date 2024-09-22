@@ -1,36 +1,22 @@
 #from datasets import load_dataset
-import txtai
+from txtai import Embeddings
 import matplotlib.pyplot as plt
 import networkx as nx
+from db_access import DBAccess
 
 class KnowledgeGraph:
-    def __init__(self, connection, embeddings_path):
-        self.setup(connection, embeddings_path)
+    def __init__(self, connection: DBAccess, embeddings: Embeddings):
+        self.setup(connection, embeddings)
     
-    def setup(self, connection, embeddings_path):
+    def setup(self, connection: DBAccess, embeddings: Embeddings):
         self.connection = connection
         self.graph = None
-        self.embeddings = txtai.Embeddings({ # inizializza l'oggetto Embeddings di txtai
-            "path": embeddings_path,
-            "content": True,
-            "functions": [
-                {"name": "graph", "function": "graph.attribute"},
-            ],
-            "expressions": [
-                {"name": "category", "expression": "graph(indexid, 'category')"},
-                {"name": "topic", "expression": "graph(indexid, 'topic')"},
-                {"name": "topicrank", "expression": "graph(indexid, 'topicrank')"}
-            ],
-            "graph": {
-                "limit": 15,
-                "minscore": 0.2
-            }
-        })
+        self.embeddings = embeddings
     
-    def regenerate(self, connection, embeddings_path, save_path): # rigenera il grafo
+    def regenerate(self, embeddings: Embeddings, save_path): # rigenera il grafo
         try:
             self.close_index()
-            self.setup(connection, embeddings_path)
+            self.setup(self.connection, embeddings)
             self.create_index(save_path)
             return "Knowledge Graph rigenerato con successo."
         except Exception as e:

@@ -30,7 +30,7 @@
   "backend": "faiss",
   "offset": 418,
   "build": {
-    "create": "2024-09-21T15:57:37Z",
+    "create": "2024-09-22T08:51:47Z",
     "python": "3.9.9",
     "settings": {
       "components": "IDMap,Flat"
@@ -38,5 +38,5 @@
     "system": "Windows (AMD64)",
     "txtai": "7.4.0"
   },
-  "update": "2024-09-21T15:57:37Z"
+  "update": "2024-09-22T08:51:47Z"
 }

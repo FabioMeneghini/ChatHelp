@@ -1,10 +1,11 @@
 import time
+from txtai import Embeddings
 from db_access import DBAccess
 from knowledge_graph import KnowledgeGraph
 from question_answering_llm import QuestionAnsweringLLM
-from zero_shot_llm import ZeroShotLLM
-from similarity_llm import SimilarityLLM
 from rank_fusion import RankFusion
+from similarity_llm import SimilarityLLM
+from zero_shot_llm import ZeroShotLLM
 
 class Chatbot:
     violations_dict = {
@@ -29,17 +30,16 @@ class Chatbot:
             yield word+' '
             time.sleep(0.025)
     
-    def __init__(self, connection, qa_model_path, zs_model_path, similarity_model_path):
+    def __init__(self, connection: DBAccess, qa_model: QuestionAnsweringLLM, zs_model: ZeroShotLLM,
+                 similarity_model: SimilarityLLM, kg: KnowledgeGraph, rank_fusion: RankFusion):
         self.connection = connection
-        self.qa_model = QuestionAnsweringLLM(qa_model_path)
-        self.qa_model_name = qa_model_path
-        self.zs_model = ZeroShotLLM(zs_model_path, "impossibile", "pertinente")
-        self.similarity_model = SimilarityLLM(similarity_model_path)
-        self.similarity_model_path = similarity_model_path
-        self.kg = KnowledgeGraph(connection, similarity_model_path)
+        self.qa_model = qa_model
+        self.zs_model = zs_model
+        self.similarity_model = similarity_model
+        self.kg = kg
         #self.kg.create_index("./index")
         self.kg.load_index("./index")
-        self.rank_fusion = RankFusion()
+        self.rank_fusion = rank_fusion
     
     def set_rank_fusion(self, strategy: RankFusion):
         self.rank_fusion = strategy
@@ -52,15 +52,14 @@ class Chatbot:
         return query
 
     def get_qa_model_name(self):
-        return self.qa_model_name
+        return self.qa_model.get_name()
 
-    def set_qa_model(self, qa_model_path):
-        self.qa_model = QuestionAnsweringLLM(qa_model_path)
-        self.qa_model_name = qa_model_path
+    def set_qa_model(self, qa_model: QuestionAnsweringLLM):
+        self.qa_model = qa_model
     
-    def regenerate_kg(self, path="./index"):
+    def regenerate_kg(self, embeddings: Embeddings, path="./index"):
         yield "Sto rigenerando il Knowledge Graph...\n\n"
-        yield self.kg.regenerate(self.connection, self.similarity_model_path, path)
+        yield self.kg.regenerate(embeddings, path)
     
     def generate_response(self, prompt, use_kg) -> str:
         safety = self._check_safety(prompt)

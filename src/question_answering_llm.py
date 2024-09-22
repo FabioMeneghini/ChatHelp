@@ -14,6 +14,9 @@ class QuestionAnsweringLLM:
             self.client = Groq(api_key=key) # si collega al servizio Groq usando la chiave API
             self.model_name = model_name
     
+    def get_name(self):
+        return self.model_name
+    
     def answer(self, question, context):
         try:
             chat_completion = self.client.chat.completions.create(

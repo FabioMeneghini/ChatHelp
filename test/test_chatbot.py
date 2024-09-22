@@ -1,30 +1,58 @@
 import sys
 sys.path.append('src')
+from txtai import Embeddings
+from knowledge_graph import KnowledgeGraph
 from chatbot import Chatbot
 from db_access import DBAccess
 from dbsf_rank_fusion import DBSFRankFusion
+from question_answering_llm import QuestionAnsweringLLM
+from zero_shot_llm import ZeroShotLLM
+from similarity_llm import SimilarityLLM
+
+zs_model = ZeroShotLLM("MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7", "impossibile", "pertinente")
+similarity_model = SimilarityLLM("nickprock/sentence-bert-base-italian-xxl-uncased")
+emb = Embeddings({
+                "path": similarity_model.get_path(),
+                "content": True,
+                "functions": [
+                    {"name": "graph", "function": "graph.attribute"},
+                ],
+                "expressions": [
+                    {"name": "category", "expression": "graph(indexid, 'category')"},
+                    {"name": "topic", "expression": "graph(indexid, 'topic')"},
+                    {"name": "topicrank", "expression": "graph(indexid, 'topicrank')"}
+                ],
+                "graph": {
+                    "limit": 15,
+                    "minscore": 0.2
+                }
+            })
 
 def test_get_qa_model_name():
-    chatbot = Chatbot(None,
-                      "mixtral-8x7b-32768",
-                      "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
-                      "nickprock/sentence-bert-base-italian-xxl-uncased")
+    connection = None
+    qa_model = QuestionAnsweringLLM("mixtral-8x7b-32768")
+    rank_fusion = DBSFRankFusion()
+    knowledge_graph = KnowledgeGraph(connection, emb)
+    chatbot = Chatbot(connection, qa_model, zs_model, similarity_model, knowledge_graph, rank_fusion)
     assert chatbot.get_qa_model_name() == "mixtral-8x7b-32768"
 
 def test_set_qa_model():
-    chatbot = Chatbot(None,
-                      "mixtral-8x7b-32768",
-                      "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
-                      "nickprock/sentence-bert-base-italian-xxl-uncased")
-    chatbot.set_qa_model("llama3-8b-8192")
+    connection = None
+    qa_model = QuestionAnsweringLLM("mixtral-8x7b-32768")
+    rank_fusion = DBSFRankFusion()
+    knowledge_graph = KnowledgeGraph(connection, emb)
+    chatbot = Chatbot(connection, qa_model, zs_model, similarity_model, knowledge_graph, rank_fusion)
+    qa_model_1 = QuestionAnsweringLLM("llama3-8b-8192")
+    chatbot.set_qa_model(qa_model_1)
     assert chatbot.get_qa_model_name() == "llama3-8b-8192"
 
 def test_regenerate_kg_1(): #grafo non rigenerato
-    chatbot = Chatbot(None,
-                      "mixtral-8x7b-32768",
-                      "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
-                      "nickprock/sentence-bert-base-italian-xxl-uncased")
-    out = chatbot.regenerate_kg()
+    connection = None
+    qa_model = QuestionAnsweringLLM("mixtral-8x7b-32768")
+    rank_fusion = DBSFRankFusion()
+    knowledge_graph = KnowledgeGraph(connection, emb)
+    chatbot = Chatbot(connection, qa_model, zs_model, similarity_model, knowledge_graph, rank_fusion)
+    out = chatbot.regenerate_kg(emb, "../index")
     out = list(out)
     assert len(out) == 2
     assert out[0] == "Sto rigenerando il Knowledge Graph...\n\n"
@@ -33,11 +61,11 @@ def test_regenerate_kg_1(): #grafo non rigenerato
 def test_regenerate_kg_2(): #grafo rigenerato
     try:
         db_access = DBAccess("localhost", "documentazione", "postgres", "", "5432")
-        chatbot = Chatbot(db_access,
-                        "mixtral-8x7b-32768",
-                        "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
-                        "nickprock/sentence-bert-base-italian-xxl-uncased")
-        out = chatbot.regenerate_kg("../index")
+        qa_model = QuestionAnsweringLLM("mixtral-8x7b-32768")
+        rank_fusion = DBSFRankFusion()
+        knowledge_graph = KnowledgeGraph(db_access, emb)
+        chatbot = Chatbot(db_access, qa_model, zs_model, similarity_model, knowledge_graph, rank_fusion)
+        out = chatbot.regenerate_kg(emb, "../index")
         #db_access.close_connection()
         out = list(out)
         #print(out)
@@ -50,11 +78,10 @@ def test_regenerate_kg_2(): #grafo rigenerato
 def test_generate_response_1(): #risposta generata
     try:
         db_access = DBAccess("localhost", "documentazione", "postgres", "", "5432") #database esistente
-        chatbot = Chatbot(db_access,
-                        "llama3-8b-8192",
-                        "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
-                        "nickprock/sentence-bert-base-italian-xxl-uncased")
-        chatbot.set_rank_fusion(DBSFRankFusion())
+        qa_model = QuestionAnsweringLLM("llama3-8b-8192")
+        rank_fusion = DBSFRankFusion()
+        knowledge_graph = KnowledgeGraph(db_access, emb)
+        chatbot = Chatbot(db_access, qa_model, zs_model, similarity_model, knowledge_graph, rank_fusion)
         out = list(chatbot.generate_response("prova", False))
         #print(out)
         assert out[0] != "Nessuna risposta generata." and not out[0].startswith("Nessun risultato trovato per la richiesta fornita")

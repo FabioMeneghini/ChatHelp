@@ -1,8 +1,10 @@
 import streamlit as st
+from txtai import Embeddings
+from chatbot import Chatbot
 from document import Document
 
 class GUIChat:
-    def __init__(self, chatbot) -> None:
+    def __init__(self, chatbot: Chatbot) -> None:
         self.chatbot = chatbot
     
     def show_message(self, msg_stream):
@@ -23,7 +25,23 @@ class GUIChat:
         self.show_message(msg)
     
     def show_btn_kg_message(self):
-        msg = self.chatbot.regenerate_kg()
+        embeddings = Embeddings({
+            "path": self.chatbot.similarity_model.get_path(),
+            "content": True,
+            "functions": [
+                {"name": "graph", "function": "graph.attribute"},
+            ],
+            "expressions": [
+                {"name": "category", "expression": "graph(indexid, 'category')"},
+                {"name": "topic", "expression": "graph(indexid, 'topic')"},
+                {"name": "topicrank", "expression": "graph(indexid, 'topicrank')"}
+            ],
+            "graph": {
+                "limit": 15,
+                "minscore": 0.2
+            }
+        })
+        msg = self.chatbot.regenerate_kg(embeddings)
         self.show_message(msg)
     
     def show_btn_new_doc_message(self, document: Document):

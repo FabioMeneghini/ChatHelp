@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from txtai import Embeddings
 from db_access import DBAccess
 from chatbot import Chatbot
 from dbsf_rank_fusion import DBSFRankFusion
@@ -8,6 +9,11 @@ from gui_chat import GUIChat
 from pdf_document import PDFDocument
 from rrf_rank_fusion import RRFRankFusion
 from sam_document import SAMDocument
+from knowledge_graph import KnowledgeGraph
+from question_answering_llm import QuestionAnsweringLLM
+from zero_shot_llm import ZeroShotLLM
+from similarity_llm import SimilarityLLM
+from rank_fusion import RankFusion
 
 class MainWindow:
     llm_dict = {
@@ -26,10 +32,28 @@ class MainWindow:
         if "connection" not in st.session_state:
             st.session_state.connection = DBAccess("localhost", "documentazione", "postgres", "", "5432")
         if "chatbot" not in st.session_state:
-            st.session_state.chatbot = Chatbot(st.session_state.connection,
-                                            "mixtral-8x7b-32768",
-                                            "MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7",
-                                            "nickprock/sentence-bert-base-italian-xxl-uncased")
+            qa_model = QuestionAnsweringLLM("mixtral-8x7b-32768")
+            zs_model = ZeroShotLLM("MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7", "impossibile", "pertinente")
+            similarity_model = SimilarityLLM("nickprock/sentence-bert-base-italian-xxl-uncased")
+            rank_fusion = RankFusion()
+            embeddings = Embeddings({
+                "path": similarity_model.get_path(),
+                "content": True,
+                "functions": [
+                    {"name": "graph", "function": "graph.attribute"},
+                ],
+                "expressions": [
+                    {"name": "category", "expression": "graph(indexid, 'category')"},
+                    {"name": "topic", "expression": "graph(indexid, 'topic')"},
+                    {"name": "topicrank", "expression": "graph(indexid, 'topicrank')"}
+                ],
+                "graph": {
+                    "limit": 15,
+                    "minscore": 0.2
+                }
+            })
+            kg = KnowledgeGraph(st.session_state.connection, embeddings)
+            st.session_state.chatbot = Chatbot(st.session_state.connection, qa_model, zs_model, similarity_model, kg, rank_fusion)
         if "is_admin" not in st.session_state:
             st.session_state.is_admin = False
         if "messages" not in st.session_state:
@@ -43,7 +67,8 @@ class MainWindow:
 
         # Aggiorna il modello di question answering se è stato selezionato un modello diverso
         if sb.get_radio_llm() != st.session_state.chatbot.get_qa_model_name():
-            st.session_state.chatbot.set_qa_model(MainWindow.llm_dict[sb.get_radio_llm()])
+            qa_model = QuestionAnsweringLLM(MainWindow.llm_dict[sb.get_radio_llm()])
+            st.session_state.chatbot.set_qa_model(qa_model)
         
         chat = GUIChat(st.session_state.chatbot)
         chat.show_history()
